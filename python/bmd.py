@@ -42,6 +42,7 @@ def get_images(mc_num, ch_num):
     return data['pics']
 
 def get_token(url):
+    data = requests.post(URL_IMAGE_TOKEN, data = {"urls": "[\""+url+"\"]"}, cookies = cookies).json()["data"][0]
     return '{}?token={}'.format(data["url"], data["token"])
 
 def download_ch(mc_num, ch_num, ch_name):
