@@ -46,9 +46,6 @@ def get_token(url):
     return '{}?token={}'.format(data["url"], data["token"])
 
 def download_ch(mc_num, ch_num, ch_name):
-    ch_dir = '{}/{}/{}'.format(args.output, manga_title, ch_name)
-    if not os.path.exists(ch_dir):
-        os.mkdir(ch_dir)
     print('[INFO]', ch_name, end=' ')
     images_url = get_images(mc_num, ch_num)
     if not images_url:
@@ -60,7 +57,10 @@ def download_ch(mc_num, ch_num, ch_name):
         print('Database saved')
         return
     print('Downloading...', end=' ', flush=True)
-    for idx, url in enumerate(images_url, 1):
+    ch_dir = '{}/{}/{}'.format(args.output, manga_title, ch_name)
+    if not os.path.exists(ch_dir):
+        os.mkdir(ch_dir)
+    for idx, url in enumerate(images_url, 0):
         full_url = get_token(url)
         path = '{}/{}/{}/{:03}.jpg'.format(args.output, manga_title, ch_name, idx)
         download_image(full_url, path)
