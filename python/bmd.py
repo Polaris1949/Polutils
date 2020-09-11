@@ -51,6 +51,7 @@ def download_ch(mc_num, ch_num, ch_name):
     if not images_url:
         print('Ignored')
         print('[WARNING] Ignoring locked episode even with cookie')
+        return
     if args.db:
         global info_dict
         info_dict[manga_title][ch_name] = len(images_url)
@@ -86,7 +87,7 @@ def parse_args():
     args = parser.parse_args()
     print('[INFO] Parsed Cmd:', args)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args = None
     parse_args()
 
