@@ -80,7 +80,7 @@ def parse_args():
     parser.add_argument('-o', help='output directory [default=download]', metavar='DIR', default='download', dest='output')
     parser.add_argument('-c', help='set cookie', metavar='STR', dest='cookies')
     parser.add_argument('-l', help='list manga catalog and exit', action='store_true', dest='li')
-    parser.add_argument('-d', help='save info json to file and exit [default=database.json]', metavar='FILE', nargs='?', const='database.json', dest='db')
+    parser.add_argument('-d', help='save info json to file and exit [default=data.json]', metavar='FILE', nargs='?', const='data.json', dest='db')
     parser.add_argument('-f', help='download free episodes only', action='store_true', dest='free')
     parser.add_argument('-u', help='update manga based on output directory', action='store_true', dest='update')
     global args
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         print('[INFO] Listing catalog [Eid Etitle]')
         eid = 0
         for ch in ch_list:
-            print(eid, '"{}"'.format(ch['short_title'] + ' ' + ch['title']))
+            print(eid, '"{}"'.format(ch['short_title'] + ' ' + ch['title']), "*Locked*" if ch['is_locked'] else "")
             eid += 1
         exit(0)
 
