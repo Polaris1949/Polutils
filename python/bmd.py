@@ -70,10 +70,13 @@ def download_ch(mc_num, ch_num, ch_name):
 def filter_str(name):
     return re.sub(r'[\/:*?"<>|]', '', name).strip().rstrip('.')
 
+def quoted(s):
+    return "'{}'".format(s)
+
 def parse_args():
     parser = argparse.ArgumentParser(add_help=False, description='parse and download bilibili manga')
     parser.add_argument('--help', help='display this help and exit', action='help')
-    parser.add_argument('--version', help='output version information and exit', action='version', version='%(prog)s 0.1')
+    parser.add_argument('--version', help='output version information and exit', action='version', version='%(prog)s 0.2')
     parser.add_argument('-m', help='manga id', metavar='NUM', dest='manga', type=int, required=True)
     parser.add_argument('-e', help='episode id list (index from 0)', action='extend', nargs='+', metavar='NUM', dest='episode', type=int)
     parser.add_argument('-r', help='episode id range (both inclusive; index from 0)', metavar='[BEGIN][,END]', dest='range')
@@ -95,17 +98,27 @@ if __name__ == '__main__':
     manga_title, ch_list = get_manga_info(mc_num)
     print('[INFO] Manga Name:', manga_title)
 
+    ch_name_list = []
+    for ch in ch_list:
+        ch_name_list.append(filter_str(ch['short_title'] + ' ' + ch['title']))
+
     if args.li:
-        print('[INFO] Listing catalog [Eid Etitle]')
-        eid = 0
-        for ch in ch_list:
-            print(eid, '"{}"'.format(ch['short_title'] + ' ' + ch['title']), "*Locked*" if ch['is_locked'] else "")
-            eid += 1
+        print('[INFO] Listing catalog...')
+        eid_max_str = str(len(ch_list) - 1)
+        eid_max_len = len(eid_max_str)
+        for eid, ch in enumerate(ch_list, 0):
+            eid_str = str(eid)
+            eid_len = len(eid_str)
+            eid_space = ' ' * (eid_max_len - eid_len)
+            ep_lock = '*' if ch['is_locked'] else ' '
+            print(eid_space + eid_str + ep_lock, quoted(ch_name_list[eid]))
         exit(0)
 
     manga_dir = '{}/{}'.format(args.output, manga_title)
     if not os.path.exists(manga_dir):
         os.makedirs(manga_dir)
+
+    orig_episode = os.listdir(manga_dir) if args.update else []
 
     if args.range:
         ep_range = args.range.split(',', 1)
@@ -120,13 +133,39 @@ if __name__ == '__main__':
         print('[INFO] Episode Range: [{},{}]'.format(ep_begin, ep_end))
         eid_list = []
         for eid in range(ep_begin, ep_end+1):
-            eid_list.append(eid)
+            ch_name = ch_name_list[eid]
+            if not (ch_name in orig_episode):
+                eid_list.append(eid)
     elif args.episode:
         eid_list = args.episode
     else:
         eid_list = []
         for eid in range(0, len(ch_list)):
-            eid_list.append(eid)
+            ch_name = ch_name_list[eid]
+            if not (ch_name in orig_episode):
+                eid_list.append(eid)
+
+    eid_name_list = []
+    eid_lock_list = []
+    need_cookies = False
+    for eid in eid_list:
+        eid_name_list.append(ch_name_list[eid])
+        if ch_list[eid]['is_locked']:
+            eid_lock_list.append(ch_name_list[eid])
+    print('[INFO] Built download task:', eid_name_list)
+    if eid_lock_list:
+        print('[INFO] Locked episode requested:', eid_lock_list)
+        need_cookies = True
+
+    cookies = {}
+    if args.cookies:
+        cookies_str = args.cookies
+        for line in cookies_str.split(';'):
+            key, value = line.strip().split('=', 1)
+            cookies[key] = value
+    if need_cookies and not cookies:
+        print('[ERROR] Required cookie not supplied')
+        exit(1)
 
     info_dict = {}
     if args.db:
@@ -135,38 +174,11 @@ if __name__ == '__main__':
                 info_dict = json.load(f)
         info_dict[manga_title] = {}
 
-    need_cookies = False
-
     for eid in eid_list:
         ch = ch_list[eid]
-        if ch['is_locked']:
-            if not args.free:
-                need_cookies = True
-            break
-
-    cookies = {}
-    if need_cookies:
-        if args.cookies:
-            cookies_str = args.cookies
-            for line in cookies_str.split(';'):
-                key, value = line.strip().split('=', 1)
-                cookies[key] = value
-        else:
-            print('[ERROR] Locked episode requested in manga; cookie is required')
-            exit(1)
-
-    orig_episode = []
-    if args.update:
-        orig_episode = os.listdir(manga_dir)
-
-    for eid in eid_list:
-        ch = ch_list[eid]
-        ch_name = filter_str(ch['short_title'] + ' ' + ch['title'])
-        if args.update and (ch_name in orig_episode):
-            print('[INFO] Skipping downloaded episode ' + ch_name)
-            continue
+        ch_name = ch_name_list[eid]
         if ch['is_locked'] and args.free:
-            print('[INFO] Skipping locked episode ' + ch_name)
+            print('[INFO] Skipping locked episode:', quoted(ch_name))
             continue
         download_ch(mc_num, ch['id'], ch_name)
 
