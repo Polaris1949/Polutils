@@ -120,29 +120,30 @@ if __name__ == '__main__':
 
     orig_episode = os.listdir(manga_dir) if args.update else []
 
-    if args.range:
-        ep_range = args.range.split(',', 1)
-        if ep_range[0]:
-            ep_begin = int(ep_range[0])
-        else:
-            ep_begin = 0
-        if len(ep_range) > 1 and ep_range[1]:
-            ep_end = int(ep_range[1])
-        else:
-            ep_end = len(ch_list)-1
-        print('[INFO] Episode Range: [{},{}]'.format(ep_begin, ep_end))
-        eid_list = []
-        for eid in range(ep_begin, ep_end+1):
-            ch_name = ch_name_list[eid]
-            if not (ch_name in orig_episode):
-                eid_list.append(eid)
-    elif args.episode:
+    if args.episode:
         eid_list = args.episode
     else:
+        if args.range:
+            ep_range = args.range.split(',', 1)
+            if ep_range[0]:
+                ep_begin = int(ep_range[0])
+            else:
+                ep_begin = 0
+            if len(ep_range) > 1 and ep_range[1]:
+                ep_end = int(ep_range[1])
+            else:
+                ep_end = len(ch_list) - 1
+            print('[INFO] Episode Range: [{},{}]'.format(ep_begin, ep_end))
+        else:
+            ep_begin = 0
+            ep_end = len(ch_list) - 1
         eid_list = []
-        for eid in range(0, len(ch_list)):
+        for eid in range(ep_begin, ep_end + 1):
             ch_name = ch_name_list[eid]
-            if not (ch_name in orig_episode):
+            if args.free and ch_list[eid]['is_locked']:
+                print('[INFO] Skipping locked episode:', quoted(ch_name))
+                continue
+            if ch_name not in orig_episode:
                 eid_list.append(eid)
 
     eid_name_list = []
@@ -177,9 +178,6 @@ if __name__ == '__main__':
     for eid in eid_list:
         ch = ch_list[eid]
         ch_name = ch_name_list[eid]
-        if ch['is_locked'] and args.free:
-            print('[INFO] Skipping locked episode:', quoted(ch_name))
-            continue
         download_ch(mc_num, ch['id'], ch_name)
 
     if args.db:
