@@ -1,7 +1,7 @@
 # Bilibili Manga Download
 ## Requirements
-- `python3`
-- `pip install requests`
+- Python version: `python3`
+- Site packages: `pip install requests`
 ## Usage
 This is a command line tool. Type `python3 bmd.py --help` for more help.
 ### Manga ID
@@ -56,7 +56,19 @@ python3 bmd.py -m 26769 -e 25 26 -c "..."
 ```
 - *Effects*: Download paid episodes (ID 25 and 26) of a manga to the default output directory `download` with cookie `"..."`.
 - *Note*: If some episodes are still locked even with cookie, they will be ignored with a warning.
+### Turn on quiet mode
+```bash
+python3 bmd.py -q [...]
+```
+- *Effects*: Turn on quiet mode when running. Only errors and requested information will be shown.
+### Save manga catalog to file
+```bash
+python3 bmd.py -m 27303 -g
+```
+- *Effects*: Save catalog of manga (ID 27303) to the default file `catalog.json`.
+## Todo
+- [ ] Intelligent updating based on catalog
 ## About
 - Author: Polaris1949
-- Version: 0.1
+- Version: 0.3
 - Inspired from [here](https://github.com/LaMP57/BilibiliMangaDownload).
